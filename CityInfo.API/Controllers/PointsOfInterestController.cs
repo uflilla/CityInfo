@@ -19,13 +19,23 @@ namespace CityInfo.API.Controllers
     [HttpGet]
     public ActionResult<IEnumerable<PointOfInterestDto>> GetPointsOfInterest(int cityId)
     {
-      var city = CityInfoInMemoryDatabase.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-      if (city is null)
+      try
       {
-        _logger.LogInformation($"city with ID:{cityId} not found");
-        return NotFound();
+        throw new Exception("Test Exception");
+        var city = CityInfoInMemoryDatabase.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+        if (city is null)
+        {
+          _logger.LogInformation($"city with ID:{cityId} not found");
+          return NotFound();
+        }
+        return Ok(city.PointsOfInterests);
       }
-      return Ok(city.PointsOfInterests);
+      catch (Exception e)
+      {
+        _logger.LogCritical($"Exception occured while getting POIs for city with ID: {cityId}",e);
+        return StatusCode(500, "Error occurred while handling the request.");
+      }
+      
     }
 
     [HttpGet("{pointOfInterestId:int}", Name = "GetPointOfInterestOfCity")]
