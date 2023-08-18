@@ -6,9 +6,9 @@ namespace CityInfo.API.DAL
   {
     public List<CityDto> Cities { get; set; } = new List<CityDto>();
 
-    public static CityInfoInMemoryDatabase Current { get; } = new();
+    //public static CityInfoInMemoryDatabase Current { get; } = new();
 
-    private CityInfoInMemoryDatabase()
+    public CityInfoInMemoryDatabase()
     {
       GetCities();
     }

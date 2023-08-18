@@ -1,5 +1,6 @@
 ﻿using CityInfo.API.DAL;
 using CityInfo.API.Models;
+using CityInfo.API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,15 @@ namespace CityInfo.API.Controllers
   public class PointsOfInterestController : ControllerBase
   {
     private readonly ILogger<PointsOfInterestController> _logger;
+    private readonly IMailService _mailService;
+    private readonly CityInfoInMemoryDatabase _cityInfoDatabase;
 
-    public PointsOfInterestController(ILogger<PointsOfInterestController> logger)
+    public PointsOfInterestController(ILogger<PointsOfInterestController> logger,
+      IMailService mailService, CityInfoInMemoryDatabase cityInfoDatabase)
     {
       _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+      _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+      _cityInfoDatabase = cityInfoDatabase;
     }
     [HttpGet]
     public ActionResult<IEnumerable<PointOfInterestDto>> GetPointsOfInterest(int cityId)
@@ -22,7 +28,7 @@ namespace CityInfo.API.Controllers
       try
       {
         throw new Exception("Test Exception");
-        var city = CityInfoInMemoryDatabase.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+        var city = _cityInfoDatabase.Cities.FirstOrDefault(c => c.Id == cityId);
         if (city is null)
         {
           _logger.LogInformation($"city with ID:{cityId} not found");
@@ -42,7 +48,7 @@ namespace CityInfo.API.Controllers
     public ActionResult<PointOfInterestDto> GetPointOfInterest(int cityId, int pointOfInterestId)
     {
 
-      var city = CityInfoInMemoryDatabase.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+      var city = _cityInfoDatabase.Cities.FirstOrDefault(c => c.Id == cityId);
       if (city is null)
       {
         _logger.LogInformation($"city with ID:{cityId} not found");
@@ -57,7 +63,7 @@ namespace CityInfo.API.Controllers
     public ActionResult<PointOfInterestDto> PostPointOfInterest(int cityId,
       PointOfInterestForCreationDto pointOfInterestForCreationDto)
     {
-      var city = CityInfoInMemoryDatabase.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+      var city = _cityInfoDatabase.Cities.FirstOrDefault(c => c.Id == cityId);
       if (city is null) return NotFound();
 
       var maxId = city.PointsOfInterests.Max(p => p.Id);
@@ -78,7 +84,7 @@ namespace CityInfo.API.Controllers
     [HttpPut("{pointOfInterestId}")]
     public ActionResult PutPointOfInterest(int cityId,int pointOfInterestId, PointOfInterestForUpdateDto pointOfInterest)
     {
-      var city = CityInfoInMemoryDatabase.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+      var city = _cityInfoDatabase.Cities.FirstOrDefault(c => c.Id == cityId);
       if (city is null) return NotFound();
       var poi = city.PointsOfInterests.FirstOrDefault(p => p.Id == pointOfInterestId);
       if (poi is null) return NotFound();
@@ -93,7 +99,7 @@ namespace CityInfo.API.Controllers
     public ActionResult PatchPointOfInterest(int cityId, int pointOfInterestId,
       JsonPatchDocument<PointOfInterestForUpdateDto> patchDoc)
     {
-      var city = CityInfoInMemoryDatabase.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+      var city = _cityInfoDatabase.Cities.FirstOrDefault(c => c.Id == cityId);
       if (city is null) return NotFound();
       var poi = city.PointsOfInterests.FirstOrDefault(p => p.Id == pointOfInterestId);
       if (poi is null) return NotFound();
@@ -112,12 +118,13 @@ namespace CityInfo.API.Controllers
     [HttpDelete("{poiId}")]
     public ActionResult DeletePointOfInterest(int cityId, int poiId)
     {
-      var city = CityInfoInMemoryDatabase.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+      var city = _cityInfoDatabase.Cities.FirstOrDefault(c => c.Id == cityId);
       if (city is null) return NotFound();
       var poi = city.PointsOfInterests.FirstOrDefault(p => p.Id == poiId);
       if (poi is null) return NotFound();
 
       city.PointsOfInterests.Remove(poi);
+      _mailService.Send("A point of interest deleted",$"A POI with ID: {poiId} from city with ID: {cityId} has been deleted");
       return NoContent();
     }
 }
