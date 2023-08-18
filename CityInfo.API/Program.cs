@@ -1,7 +1,9 @@
 using CityInfo.API.DAL;
+using CityInfo.API.DbContexts;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -30,6 +32,8 @@ builder.Services.AddTransient<IMailService, LocalMailService>();
 builder.Services.AddTransient<IMailService, CloudMailService>();
 #endif
 builder.Services.AddSingleton<CityInfoInMemoryDatabase>();
+builder.Services.AddDbContext<CityInfoContext>(dbContextOption => 
+  dbContextOption.UseSqlite("Data Source=CityInfo.db"));
 
 var app = builder.Build();
 
