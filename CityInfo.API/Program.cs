@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using AutoMapper;
 
 Log.Logger = new LoggerConfiguration()
   .MinimumLevel.Debug()
@@ -33,7 +34,11 @@ builder.Services.AddTransient<IMailService, CloudMailService>();
 #endif
 builder.Services.AddSingleton<CityInfoInMemoryDatabase>();
 builder.Services.AddDbContext<CityInfoContext>(dbContextOption => 
-  dbContextOption.UseSqlite("Data Source=CityInfo.db"));
+  dbContextOption.UseSqlite(builder.Configuration["connectionStrings:CityInfoDbConnectionString"]));
+
+builder.Services.AddScoped<ICityInfoRepository, CityInfoRepository>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 
 var app = builder.Build();
 
