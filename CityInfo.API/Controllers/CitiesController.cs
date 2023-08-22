@@ -20,9 +20,9 @@ namespace CityInfo.API.Controllers
       _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CityDtoWithoutPoi>>> GetCities()
+    public async Task<ActionResult<IEnumerable<CityDtoWithoutPoi>>> GetCities(string? name, string? searchQuery)
     {
-      var cityEntities = await _cityInfoRepository.GetCitiesAsync();
+      var cityEntities = await _cityInfoRepository.GetCitiesAsync(name, searchQuery);
       var result = _mapper.Map<IEnumerable<CityDtoWithoutPoi>>(cityEntities);
       return Ok(result);
     }

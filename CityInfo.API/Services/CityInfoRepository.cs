@@ -16,7 +16,22 @@ namespace CityInfo.API.Services
     {
       return await _context.Cities.OrderBy(c=>c.Name).ToListAsync();
     }
+    public async Task<IEnumerable<City>> GetCitiesAsync(string? name, string? searchQuery)
+    {
+      if(string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(searchQuery)) return await GetCitiesAsync();
 
+      var collection=_context.Cities as IQueryable<City>;
+      if (!string.IsNullOrWhiteSpace(name))
+      {
+        collection=collection.Where(c=>c.Name==name.Trim());
+      }
+      if (!string.IsNullOrWhiteSpace(searchQuery))
+      {
+        var sq=searchQuery.Trim();
+        collection.Where(c=>c.Name.Contains(sq) || (c.Description.Contains(sq)));
+      }
+      return await collection.ToListAsync();
+    }
     public async Task<bool> DoesCityExist(int cityId)
     {
       return await _context.Cities.AnyAsync(c => c.Id == cityId);
@@ -57,5 +72,7 @@ namespace CityInfo.API.Services
     {
       return (await _context.SaveChangesAsync() >= 0);
     }
+
+    
   }
 }
