@@ -6,10 +6,15 @@ namespace CityInfo.API.Services
   {
     Task<IEnumerable<City>> GetCitiesAsync();
 
+    Task<bool> DoesCityExist(int cityId);
     Task<City?> GetCityAsync(int cityId, bool includePoi);
 
     Task<IEnumerable<PointOfInterest>> GetPointsOfInterestOfCity(int cityId);
 
-    Task<PointOfInterest?> GetPointOfInterest(int cityId, int poiId);
+    Task<PointOfInterest?> GetPointOfInterestAsync(int cityId, int poiId);
+
+    Task AddPoiForCityAsync(int cityId, PointOfInterest poi);
+    void DeletePointOfInterest(PointOfInterest poi);
+    Task<bool> SaveChangesAsync();
   }
 }

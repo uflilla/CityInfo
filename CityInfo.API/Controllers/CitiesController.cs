@@ -28,11 +28,18 @@ namespace CityInfo.API.Controllers
     }
 
     [HttpGet("{id}")]
-    public ActionResult<CityDto> GetCity(int id)
+    public async Task<IActionResult> GetCity(int id, bool includePoi=false)
     {
+      var city = await _cityInfoRepository.GetCityAsync(id, includePoi);
+      if (city is null) return NotFound();
+      if (includePoi)
+      {
+        return Ok(_mapper.Map<CityDto>(city));
+      }
+
+      return Ok(_mapper.Map<CityDtoWithoutPoi>(city));
       /*var city=_cityInfoRepository.Cities.FirstOrDefault(c => c.Id == id);
       if (city is null) return NotFound();*/
-      return Ok();
     }
   }
 }
