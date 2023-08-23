@@ -3,6 +3,7 @@ using CityInfo.API.DAL;
 using CityInfo.API.Entities;
 using CityInfo.API.Models;
 using CityInfo.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CityInfo.API.Controllers
 {
   [Route("api/cities/{cityId:int}/pointsofinterest")]
+  [Authorize]
   [ApiController]
   public class PointsOfInterestController : ControllerBase
   {
@@ -29,6 +31,8 @@ namespace CityInfo.API.Controllers
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PointOfInterestDto>>> GetPointsOfInterest(int cityId)
     {
+      var city = User.Claims.FirstOrDefault(c => c.Type == "city")?.Value;
+      if (!await _cityInfoRepository.CityNameMatchesId(city, cityId)) return Forbid();
       if (!await _cityInfoRepository.DoesCityExist(cityId)) return NotFound();
       var pois = await _cityInfoRepository.GetPointsOfInterestOfCity(cityId);
       return Ok(_mapper.Map<IEnumerable<PointOfInterestDto>>(pois));

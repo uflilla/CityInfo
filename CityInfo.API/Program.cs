@@ -1,3 +1,4 @@
+using System.Text;
 using CityInfo.API.DAL;
 using CityInfo.API.DbContexts;
 using CityInfo.API.Services;
@@ -6,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 Log.Logger = new LoggerConfiguration()
   .MinimumLevel.Debug()
@@ -38,7 +41,25 @@ builder.Services.AddDbContext<CityInfoContext>(dbContextOption =>
 
 builder.Services.AddScoped<ICityInfoRepository, CityInfoRepository>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
+// Add authentication services
+builder.Services.AddAuthentication(options =>
+  {
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+  })
+  .AddJwtBearer(options =>
+  {
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+      ValidateIssuer = true,
+      ValidateAudience = true,
+      ValidateLifetime = true,
+      ValidateIssuerSigningKey = true,
+      ValidIssuer = builder.Configuration["Authentication:Issuer"],
+      ValidAudience = builder.Configuration["Authentication:Audience"],
+      IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Authentication:secretForKey"]))
+    };
+  });
 
 var app = builder.Build();
 
@@ -51,8 +72,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+app.UseAuthentication();
 
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
